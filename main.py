@@ -1,8 +1,6 @@
 import chess
 import engine
 
-print("hello")
-
 board = chess.Board()
 
 
