@@ -1,27 +1,43 @@
 import chess
 import engine
-
-print("hello")
+import chess.svg
+from PyQt5.QtSvg import QSvgWidget
+from PyQt5.QtWidgets import QApplication, QWidget
 
 board = chess.Board()
 
+class MainWindow(QWidget):
+    def __init__(self):
+        super().__init__()
 
-# todo import chess api and make random moves
+        self.widgetSvg = QSvgWidget(parent=self)
+        self.widgetSvg.setGeometry(10, 10, 800, 800)
 
-while not board.is_game_over():
+        self.chessboard = board
 
-    print(board)
-    move1 = input("make a move please:\n")
-    board.push_san(move1)
+    def paintEvent(self, event):
+        self.chessboardSvg = chess.svg.board(self.chessboard).encode("UTF-8")
+        self.widgetSvg.load(self.chessboardSvg)
+    pass
 
-    move2 = engine.make_a_move(board)
-    board.push(move2)
+if __name__ == "__main__":
+    app = QApplication([])
+    window = MainWindow()
+    window.show()
+    app.exec_()
 
 
 
-
-
-
+    # def test():
+    #     if board.is_game_over():
+    #         print(board)
+    #         move1 = input("make a move please:\n")
+    #         board.push_san(move1)
+    #
+    #         move2 = engine.make_a_move(board)
+    #         board.push(move2)
+    #     pass
+    # todo import chess api and make random moves
 
 
 
