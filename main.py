@@ -4,21 +4,21 @@ import engine
 board = chess.Board()
 
 
-# todo import chess api and make random moves
+def main():
 
-while not board.is_game_over():
+    # board.push_san("e4")
+    # board.push_san("e5")
+    # board.push_san("Qh5")
+    # board.push_san("g6") # blunder
 
-    print(board)
-    move1 = input("make a move please:\n")
-    board.push_san(move1)
-
-    move2 = engine.make_a_move(board)
-    board.push(move2)
-
-
-
+    while not board.is_game_over():
+        print(board)
+        move = engine.choose_move(board, 3)
+        board.push(move)
 
 
+if __name__ == "__main__":
+    main()
 
 
 

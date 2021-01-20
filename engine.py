@@ -1,125 +1,64 @@
-import random, numpy
-from main import board
+import chess
+
+piece_values = {
+    chess.PAWN: 100,
+    chess.ROOK: 500,
+    chess.KNIGHT: 320,
+    chess.BISHOP: 330,
+    chess.QUEEN: 900,
+    chess.KING: 20000
+}
 
 
-def make_a_move(board):
-    lst = list(board.legal_moves)
-    return random.choice(lst)
+def evaluate(board):
+    if board.result() == '1-0':
+        return float('inf')
+    elif board.result() == '0-1':
+        return -float('inf')
 
-
-def evaluate():
-    # todo here we need fucntion that returns float value (<0 black >0 white)
-    pass
-
-class Heuristics:
-
-    # The tables denote the points scored for the position of the chess pieces on the board.
-    PAWN_TABLE = numpy.array([
-        [ 0,  0,  0,  0,  0,  0,  0,  0],
-        [ 5, 10, 10,-20,-20, 10, 10,  5],
-        [ 5, -5,-10,  0,  0,-10, -5,  5],
-        [ 0,  0,  0, 20, 20,  0,  0,  0],
-        [ 5,  5, 10, 25, 25, 10,  5,  5],
-        [10, 10, 20, 30, 30, 20, 10, 10],
-        [50, 50, 50, 50, 50, 50, 50, 50],
-        [ 0,  0,  0,  0,  0,  0,  0,  0]
-    ])
-
-    KNIGHT_TABLE = numpy.array([
-        [-50, -40, -30, -30, -30, -30, -40, -50],
-        [-40, -20,   0,   5,   5,   0, -20, -40],
-        [-30,   5,  10,  15,  15,  10,   5, -30],
-        [-30,   0,  15,  20,  20,  15,   0, -30],
-        [-30,   5,  15,  20,  20,  15,   0, -30],
-        [-30,   0,  10,  15,  15,  10,   0, -30],
-        [-40, -20,   0,   0,   0,   0, -20, -40],
-        [-50, -40, -30, -30, -30, -30, -40, -50]
-    ])
-
-    BISHOP_TABLE = numpy.array([
-        [-20, -10, -10, -10, -10, -10, -10, -20],
-        [-10,   5,   0,   0,   0,   0,   5, -10],
-        [-10,  10,  10,  10,  10,  10,  10, -10],
-        [-10,   0,  10,  10,  10,  10,   0, -10],
-        [-10,   5,   5,  10,  10,   5,   5, -10],
-        [-10,   0,   5,  10,  10,   5,   0, -10],
-        [-10,   0,   0,   0,   0,   0,   0, -10],
-        [-20, -10, -10, -10, -10, -10, -10, -20]
-    ])
-
-    ROOK_TABLE = numpy.array([
-        [ 0,  0,  0,  5,  5,  0,  0,  0],
-        [-5,  0,  0,  0,  0,  0,  0, -5],
-        [-5,  0,  0,  0,  0,  0,  0, -5],
-        [-5,  0,  0,  0,  0,  0,  0, -5],
-        [-5,  0,  0,  0,  0,  0,  0, -5],
-        [-5,  0,  0,  0,  0,  0,  0, -5],
-        [ 5, 10, 10, 10, 10, 10, 10,  5],
-        [ 0,  0,  0,  0,  0,  0,  0,  0]
-    ])
-
-    QUEEN_TABLE = numpy.array([
-        [-20, -10, -10, -5, -5, -10, -10, -20],
-        [-10,   0,   5,  0,  0,   0,   0, -10],
-        [-10,   5,   5,  5,  5,   5,   0, -10],
-        [  0,   0,   5,  5,  5,   5,   0,  -5],
-        [ -5,   0,   5,  5,  5,   5,   0,  -5],
-        [-10,   0,   5,  5,  5,   5,   0, -10],
-        [-10,   0,   0,  0,  0,   0,   0, -10],
-        [-20, -10, -10, -5, -5, -10, -10, -20]
-    ])
-
-class AI:
-    INFINITE = 10000000
-
-    def minimax(board, depth, maximizing, WHITE="W", BLACK="B"):
-        if (depth == 0):
-            return Heuristics.evaluate(board)
-
-        if (maximizing):
-            best_score = -AI.INFINITE
-            for move in board.get_possible_moves(WHITE):
-                copy = board.Board.clone(board)
-                copy.perform_move(move)
-
-                score = AI.minimax(copy, depth-1, False)
-                best_score = max(best_score, score)
-
-            return best_score
+    white_material = 0
+    black_material = 0
+    for square in chess.SQUARES:
+        piece = board.piece_at(square)
+        if not piece:
+            continue
+        if piece.color == chess.WHITE:
+            white_material += piece_values[piece.piece_type]
         else:
-            best_score = AI.INFINITE
-            for move in board.get_possible_moves(BLACK):
-                copy = board.Board.clone(board)
-                copy.perform_move(move)
+            black_material += piece_values[piece.piece_type]
+    return white_material - black_material
+    # TODO better eval
 
-                score = AI.minimax(copy, depth-1, True)
-                best_score = min(best_score, score)
 
-            return best_score
+def minimax(board, depth, maximizing_player):
+    if depth == 0 or board.is_game_over():
+        return evaluate(board)
+    if maximizing_player:
+        value = -float('inf')
+        for move in board.legal_moves:
+            board.push(move)
+            value = max(value, minimax(board, depth - 1, False))
+            board.pop()
+        return value
+    else:
+        value = float('inf')
+        for move in board.legal_moves:
+            board.push(move)
+            value = min(value, minimax(board, depth - 1, True))
+            board.pop()
+        return value
+    # TODO alpha beta
 
-    def alphabeta(chessboard, depth, a, b, maximizing, WHITE="W", BLACK="B"):
-        if (depth == 0):
-            return Heuristics.evaluate(chessboard)
 
-        if (maximizing):
-            best_score = -AI.INFINITE
-            for move in chessboard.get_possible_moves(WHITE):
-                copy = board.Board.clone(chessboard)
-                copy.perform_move(move)
+def choose_move(board, depth):
+    value = -float('inf')
+    best_move = None
+    for move in board.legal_moves:
+        board.push(move)
+        new_value = minimax(board, depth, False)
+        board.pop()
+        if new_value > value:
+            best_move = move
+            value = new_value
 
-                best_score = max(best_score, AI.alphabeta(copy, depth-1, a, b, False))
-                a = max(a, best_score)
-                if (b <= a):
-                    break
-            return best_score
-        else:
-            best_score = AI.INFINITE
-            for move in chessboard.get_possible_moves(BLACK):
-                copy = board.Board.clone(chessboard)
-                copy.perform_move(move)
-
-                best_score = min(best_score, AI.alphabeta(copy, depth-1, a, b, True))
-                b = min(b, best_score)
-                if (b <= a):
-                    break
-            return best_score
+    return best_move
